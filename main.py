@@ -72,6 +72,7 @@ async def main() -> None:
     db = DatabaseManager()
     for chat in chats:
         posts: list[Message]= await client.get_messages(chat, limit=3)
+        send_sms(os.getenv("FRIEND_PHONE", ""),posts[0].text[:70])
         for post in posts:
             if post.text and not db.is_post_sent(post.id):
                 db.save_post(post.id, post.chat_id, post.text, post.chat.title)
