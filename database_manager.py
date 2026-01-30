@@ -1,5 +1,5 @@
 import sqlite3
-from typing import List, Optional, Final
+from typing import Optional, Final
 from datetime import datetime
 import logging
 

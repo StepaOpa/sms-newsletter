@@ -45,7 +45,7 @@ def send_sms(phone: str, text: str) -> None:
 @client.on(events.NewMessage(chats=chats))
 async def handler(event: events.NewMessage.Event) -> None:
     logger.info("Новое сообщение получено")
-    db = DatabaseManager() # Можно вынести инициализацию db выше
+    db = DatabaseManager()
     
     msg: Message = event.message
     
