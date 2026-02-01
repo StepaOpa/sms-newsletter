@@ -27,16 +27,16 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 API_KEY: Final[int] = int(os.getenv("API_KEY"))
 API_HASH: Final[str] = os.getenv("API_HASH")
+friends_phone = os.getenv('FRIENDS_PHONE')
 client = TelegramClient('my_session', API_KEY, API_HASH)
 
-chats: list[str] = ['@mcrepostworld', "@O_Arestovich_official", "@kontext_channel"]
+chats: list[str] = ['@mcrepostworld', "@kontext_channel", '@brokendance', '@vneshpol']
 
 
 
 def send_sms(phone: str, text: str) -> None:
     """Отправляет СМС через Termux API."""
     try:
-        
         subprocess.run(["termux-sms-send", "-n", phone, text], check=True)
         logger.info(f"СМС успешно отправлено на номер {phone}")
     except Exception as e:
@@ -60,10 +60,7 @@ async def handler(event: events.NewMessage.Event) -> None:
     # 3. Сохраняем в базу
     if db.save_post(msg.id, msg.chat_id, msg.text):
         logger.info(f"Новый пост обнаружен (ID: {msg.id}). Отправляю СМС...")
-        
-        # 4. Отправляем СМС (номер возьми из .env)
-        friend_phone: str = os.getenv("FRIEND_PHONE", "")
-        send_sms(friend_phone, msg.text)
+        send_sms(friends_phone, msg.text)
 
 async def main() -> None:
     await client.start()
@@ -71,12 +68,18 @@ async def main() -> None:
 
     db = DatabaseManager()
     for chat in chats:
-        posts: list[Message]= await client.get_messages(chat, limit=3)
-        send_sms(os.getenv("FRIEND_PHONE", ""),posts[0].text[:70])
+        # Получаем информацию о чате
+        chat_info = await client.get_entity(chat)
+        
+        # Получаем название канала
+        channel_name = chat_info.title if chat_info.title else "Без названия"
+
+        posts: list[Message] = await client.get_messages(chat, limit=3)
         for post in posts:
             if post.text and not db.is_post_sent(post.id):
-                db.save_post(post.id, post.chat_id, post.text, post.chat.title)
-    
+                send_sms(friends_phone, f'[{channel_name}] {post.text}')
+                db.save_post(post.id, post.chat_id, post.text, channel_name)
+
     logger.info('Бот ожидает новые сообщения...')
 
     await client.run_until_disconnected()

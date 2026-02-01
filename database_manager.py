@@ -1,5 +1,5 @@
-import sqlite3
 from typing import Optional, Final
+import sqlite3
 from datetime import datetime
 import logging
 
