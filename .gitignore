@@ -209,3 +209,6 @@ __marimo__/
 .session
 my_session.session
 *.db
+
+*.mp3
+*.ogg

@@ -8,8 +8,8 @@ from typing import Final
 import logging
 import subprocess
 
-
 from database_manager import DatabaseManager
+from audio_compressor import AudioCompressor, AudioExportSettings
 
 LOG_FORMAT: Final[str] = "%(asctime)s [%(name)s] %(levelname)s: %(message)s"
 
@@ -48,16 +48,10 @@ async def handler(event: events.NewMessage.Event) -> None:
     db = DatabaseManager()
     
     msg: Message = event.message
-    
-    # 1. Проверяем, есть ли текст
-    if not msg.text:
-        return
 
-    # 2. Проверяем в базе, не обрабатывали ли мы этот пост
     if db.is_post_sent(msg.id):
         return
-
-    # 3. Сохраняем в базу
+    
     if db.save_post(msg.id, msg.chat_id, msg.text):
         logger.info(f"Новый пост обнаружен (ID: {msg.id}). Отправляю СМС...")
         send_sms(friends_phone, msg.text)
@@ -87,14 +81,18 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        with client:
-            client.loop.run_until_complete(main())
-    except KeyboardInterrupt:
-        logger.info("Бот остановлен пользователем")
-    except Exception as e:
-        logger.critical(f"Бот упал с ошибкой: {e}", exc_info=True)
-    finally:
-        logger.info("Сессия закрыта. Программа завершена.")
+    filename = "Red_Hot_Chili_Peppers_-_Otherside_76785243.mp3"
+    default_audio_export_settings = AudioExportSettings()
+    audio_compressor = AudioCompressor(default_audio_export_settings)
+    audio_compressor.compress_audio(filename)
+    # try:
+    #     loop = asyncio.new_event_loop()
+    #     asyncio.set_event_loop(loop)
+    #     with client:
+    #         client.loop.run_until_complete(main())
+    # except KeyboardInterrupt:
+    #     logger.info("Бот остановлен пользователем")
+    # except Exception as e:
+    #     logger.critical(f"Бот упал с ошибкой: {e}", exc_info=True)
+    # finally:
+    #     logger.info("Сессия закрыта. Программа завершена.")
